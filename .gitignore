@@ -1,0 +1,10 @@
+venv/
+__pycache__/
+*.pyc
+
+# Artefacts generes a l'execution (cles privees, certificats, registre)
+ca/
+clients/
+
+# Fichiers systeme
+.DS_Store
