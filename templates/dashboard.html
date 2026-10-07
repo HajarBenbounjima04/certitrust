@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>CertiTrust — Registre PKI</title>
+<style>
+  :root {
+    --ink: #14181d;
+    --paper: #f2efe8;
+    --paper-dim: #cfc9ba;
+    --line: #3a4048;
+    --accent: #2f6d5c;
+    --accent-soft: #7fae9d;
+    --danger: #a5382f;
+    --danger-soft: #d99089;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ink);
+    color: var(--paper);
+    font-family: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+    margin: 0;
+    padding: 48px 24px 80px;
+    line-height: 1.5;
+  }
+
+  .wrap { max-width: 880px; margin: 0 auto; }
+
+  header {
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 24px;
+    margin-bottom: 36px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  h1 {
+    font-size: 2rem;
+    letter-spacing: 0.02em;
+    margin: 0;
+    font-weight: 500;
+  }
+
+  .subtitle {
+    font-family: "Courier New", monospace;
+    font-size: 0.85rem;
+    color: var(--paper-dim);
+  }
+
+  .flash {
+    font-family: "Courier New", monospace;
+    font-size: 0.9rem;
+    padding: 10px 14px;
+    border-left: 3px solid var(--accent);
+    background: rgba(47, 109, 92, 0.12);
+    margin-bottom: 10px;
+  }
+  .flash.error {
+    border-left-color: var(--danger);
+    background: rgba(165, 56, 47, 0.12);
+    color: var(--danger-soft);
+  }
+
+  section { margin-bottom: 44px; }
+
+  h2 {
+    font-size: 1.1rem;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+  }
+
+  .ca-status {
+    font-family: "Courier New", monospace;
+    font-size: 0.9rem;
+    color: var(--paper-dim);
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    row-gap: 6px;
+  }
+
+  .stats { display: flex; gap: 40px; margin-bottom: 20px; }
+  .stats > div { margin-right: 40px; }
+  .stats > div:last-child { margin-right: 0; }
+  .stat-num { font-size: 2.2rem; line-height: 1; }
+  .stat-label {
+    font-family: "Courier New", monospace;
+    font-size: 0.75rem;
+    color: var(--paper-dim);
+    margin-top: 4px;
+  }
+  .stat-num.revoked { color: var(--danger-soft); }
+  .stat-num.valid { color: var(--accent-soft); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td {
+    text-align: left;
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--line);
+  }
+  th {
+    font-family: "Courier New", monospace;
+    font-weight: 400;
+    font-size: 0.72rem;
+    color: var(--paper-dim);
+  }
+  td.mono { font-family: "Courier New", monospace; font-size: 0.82rem; }
+  .status-valid { color: var(--accent-soft); }
+  .status-revoked { color: var(--danger-soft); }
+  .empty-row td {
+    font-family: "Courier New", monospace;
+    color: var(--paper-dim);
+    font-style: italic;
+  }
+
+  form.inline {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  input[type=text] {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--paper);
+    padding: 8px 10px;
+    font-family: "Courier New", monospace;
+    font-size: 0.85rem;
+    min-width: 180px;
+  }
+  input[type=text]:focus { outline: 1px solid var(--accent-soft); border-color: var(--accent-soft); }
+
+  select {
+    background: var(--ink);
+    border: 1px solid var(--line);
+    color: var(--paper);
+    padding: 8px 10px;
+    font-family: "Courier New", monospace;
+    font-size: 0.85rem;
+  }
+
+  button {
+    background: transparent;
+    border: 1px solid var(--accent-soft);
+    color: var(--accent-soft);
+    padding: 8px 16px;
+    font-family: "Courier New", monospace;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  button:hover { background: var(--accent-soft); color: var(--ink); }
+  button.danger { border-color: var(--danger-soft); color: var(--danger-soft); }
+  button.danger:hover { background: var(--danger-soft); color: var(--ink); }
+
+  .actions-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+  }
+  @media (max-width: 640px) {
+    .actions-grid { grid-template-columns: 1fr; }
+  }
+
+  .action-block {
+    border: 1px solid var(--line);
+    padding: 18px;
+  }
+  .action-block h3 {
+    margin: 0 0 12px;
+    font-size: 0.85rem;
+    font-family: "Courier New", monospace;
+    color: var(--paper-dim);
+    font-weight: 400;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <h1>CertiTrust</h1>
+      <div class="subtitle">registre de gestion PKI — MVP</div>
+    </div>
+  </header>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="flash {{ 'error' if category == 'error' else '' }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <section>
+    <h2>Autorite de certification</h2>
+    {% if ca_info %}
+      <div class="ca-status">
+        <div>Sujet</div><div>{{ ca_info.subject }}</div>
+        <div>Numero de serie</div><div>{{ ca_info.serial }}</div>
+        <div>Validite</div><div>{{ ca_info.not_valid_before[:10] }} &rarr; {{ ca_info.not_valid_after[:10] }}</div>
+      </div>
+      <br>
+      <form class="inline" method="post" action="{{ url_for('create_ca') }}"
+            onsubmit="return confirm('Recreer la Root CA va invalider tous les certificats existants. Continuer ?');">
+        <button class="danger" type="submit">Recreer la Root CA</button>
+      </form>
+    {% else %}
+      <p style="font-family: 'Courier New', monospace; color: var(--paper-dim);">
+        Aucune Root CA n'a encore ete generee.
+      </p>
+      <form method="post" action="{{ url_for('create_ca') }}">
+        <button type="submit">Creer la CA</button>
+      </form>
+    {% endif %}
+  </section>
+
+  <section>
+    <h2>Certificats</h2>
+    <div class="stats">
+      <div>
+        <div class="stat-num">{{ certs|length }}</div>
+        <div class="stat-label">emis</div>
+      </div>
+      <div>
+        <div class="stat-num valid">{{ valid_count }}</div>
+        <div class="stat-label">valides</div>
+      </div>
+      <div>
+        <div class="stat-num revoked">{{ revoked_count }}</div>
+        <div class="stat-label">revoques</div>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Nom commun</th>
+          <th>Numero de serie</th>
+          <th>Statut</th>
+          <th>Expire le</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in certs %}
+        <tr>
+          <td>{{ c.common_name }}</td>
+          <td class="mono">{{ c.serial_number[:18] }}&hellip;</td>
+          <td class="{{ 'status-valid' if c.status == 'valid' else 'status-revoked' }}">{{ c.status }}</td>
+          <td class="mono">{{ c.not_valid_after[:10] }}</td>
+        </tr>
+        {% else %}
+        <tr class="empty-row"><td colspan="4">Aucun certificat emis pour l'instant.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Actions</h2>
+    <div class="actions-grid">
+
+      <div class="action-block">
+        <h3>Emettre un certificat</h3>
+        <form class="inline" method="post" action="{{ url_for('issue_certificate') }}">
+          <input type="text" name="common_name" placeholder="nom commun" required>
+          <button type="submit">Emettre</button>
+        </form>
+      </div>
+
+      <div class="action-block">
+        <h3>Revoquer un certificat</h3>
+        <form class="inline" method="post" action="{{ url_for('revoke_certificate') }}">
+          <input type="text" name="common_name" placeholder="nom commun" required>
+          <select name="reason">
+            {% for r in reasons %}
+            <option value="{{ r }}">{{ r }}</option>
+            {% endfor %}
+          </select>
+          <button class="danger" type="submit">Revoquer</button>
+        </form>
+      </div>
+
+      <div class="action-block">
+        <h3>Generer la CRL</h3>
+        <form method="post" action="{{ url_for('generate_crl') }}">
+          <button type="submit">Generer la CRL</button>
+        </form>
+      </div>
+
+      <div class="action-block">
+        <h3>Verifier un certificat</h3>
+        <form class="inline" method="post" action="{{ url_for('verify_certificate') }}">
+          <input type="text" name="common_name" placeholder="nom commun" required>
+          <button type="submit">Verifier</button>
+        </form>
+      </div>
+
+      <div class="action-block">
+        <h3>Verifier avec OpenSSL</h3>
+        <p style="font-family:'Courier New',monospace;font-size:0.78rem;color:var(--paper-dim);margin:0 0 10px;">
+           
+        </p>
+        <form class="inline" method="post" action="{{ url_for('verify_openssl') }}">
+          <input type="text" name="common_name" placeholder="nom commun" required>
+          <button type="submit">Verifier (OpenSSL)</button>
+        </form>
+      </div>
+
+    </div>
+  </section>
+
+  {% if openssl_result %}
+  <section>
+    <h2>Resultat OpenSSL — {{ openssl_result.common_name }}</h2>
+
+    <div class="action-block" style="margin-bottom:16px;">
+      <h3>1) Chaine de confiance</h3>
+      <pre style="white-space:pre-wrap;font-family:'Courier New',monospace;font-size:0.8rem;margin:0 0 8px;">$ {{ openssl_result.chain_check.command }}
+{{ openssl_result.chain_check.stdout or openssl_result.chain_check.stderr }}</pre>
+      <div class="{{ 'status-valid' if openssl_result.chain_check.ok else 'status-revoked' }}">
+        ==&gt; {{ 'OK (chaine de confiance valide)' if openssl_result.chain_check.ok else 'ECHEC' }}
+      </div>
+    </div>
+
+    {% if openssl_result.crl_check %}
+    <div class="action-block">
+      <h3>2) Verification avec la CRL</h3>
+      <pre style="white-space:pre-wrap;font-family:'Courier New',monospace;font-size:0.8rem;margin:0 0 8px;">$ {{ openssl_result.crl_check.command }}
+{{ openssl_result.crl_check.stdout or openssl_result.crl_check.stderr }}</pre>
+      <div class="{{ 'status-valid' if openssl_result.crl_check.ok else 'status-revoked' }}">
+        ==&gt; {{ 'OK (non revoque)' if openssl_result.crl_check.ok else 'ECHEC (revoque ou invalide)' }}
+      </div>
+    </div>
+    {% else %}
+    <p style="font-family:'Courier New',monospace;color:var(--paper-dim);">
+      Aucune CRL generee pour l'instant, verification CRL ignoree.
+    </p>
+    {% endif %}
+  </section>
+  {% endif %}
+
+</div>
+</body>
+</html>
